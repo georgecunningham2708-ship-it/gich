@@ -1,86 +1,13 @@
-<!DOCTYPE html>
-
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RED VS GLITCH S1 E2</title>
-
-<style>
-body {
-    margin: 0;
-    height: 100vh;
-    background: linear-gradient(135deg, #0a0015, #2b0040, #000000);
-    font-family: Arial, sans-serif;
-    overflow: hidden;
-    color: red;
-}
-
-.overlay {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.6);
-}
-
-/* Title */
-.title {
-    position: absolute;
-    top: 35%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 60px;
-    letter-spacing: 5px;
-}
-
-/* Timer */
-.timer {
-    position: absolute;
-    top: 55%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 40px;
-}
-
-/* Canvas for shapes */
-canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-
-/* subtle flicker */
-@keyframes flicker {
-    0%,100% { opacity: 1; }
-    50% { opacity: 0.85; }
-}
-
-body {
-    animation: flicker 3s infinite;
-}
-</style>
-
-</head>
-
-<body>
-
-<div class="overlay"></div>
-
-<canvas id="canvas"></canvas>
-
-<div class="title">RED VS GLITCH S1 E2</div>
-<div class="timer" id="countdown">72:00:00</div>
-
-<audio id="wind" autoplay loop>
-    <source src="dragon-studio-heavy-blizzard-wind-gust-515271 (1).mp3" type="audio/mpeg">
-</audio>
-
 <script>
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+// RESET TIMER WITH "R"
+document.addEventListener("keydown", (e) => {
+    if (e.key.toLowerCase() === "r") {
+        localStorage.removeItem("endTime");
+        localStorage.removeItem("lastSpawn");
+        localStorage.removeItem("shapes");
+        location.reload();
+    }
+});
 
 // TIMER (72 HOURS)
 let endTime = localStorage.getItem("endTime");
@@ -111,91 +38,7 @@ function updateTimer() {
         String(seconds).padStart(2, '0');
 }
 
+// 🔥 RUN IMMEDIATELY so it shows 72:00:00 instantly
+updateTimer();
 setInterval(updateTimer, 1000);
-
-// SHAPES SYSTEM
-let shapes = [];
-
-// Load saved shapes
-let savedShapes = localStorage.getItem("shapes");
-if (savedShapes) shapes = JSON.parse(savedShapes);
-
-// Add a new shape every hour
-function addShape() {
-    const types = ["circle", "square", "triangle"];
-    const type = types[Math.floor(Math.random() * types.length)];
-
-    shapes.push({
-        type: type,
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        size: 30 + Math.random() * 50
-    });
-
-    localStorage.setItem("shapes", JSON.stringify(shapes));
-}
-
-// Track last spawn
-let lastSpawn = localStorage.getItem("lastSpawn");
-
-if (!lastSpawn) {
-    lastSpawn = new Date().getTime();
-    localStorage.setItem("lastSpawn", lastSpawn);
-}
-
-function checkSpawn() {
-    let now = new Date().getTime();
-
-    if (now - lastSpawn >= 3600000) { // 1 hour
-        addShape();
-        lastSpawn = now;
-        localStorage.setItem("lastSpawn", lastSpawn);
-    }
-}
-
-setInterval(checkSpawn, 10000);
-
-// DRAW SHAPES (hand-drawn glitch style)
-function drawShapes() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    shapes.forEach(shape => {
-        ctx.strokeStyle = "red";
-        ctx.lineWidth = 2;
-
-        let glitchX = shape.x + (Math.random() - 0.5) * 4;
-        let glitchY = shape.y + (Math.random() - 0.5) * 4;
-
-        ctx.beginPath();
-
-        if (shape.type === "circle") {
-            ctx.arc(glitchX, glitchY, shape.size, 0, Math.PI * 2);
-        }
-
-        if (shape.type === "square") {
-            ctx.rect(glitchX, glitchY, shape.size, shape.size);
-        }
-
-        if (shape.type === "triangle") {
-            ctx.moveTo(glitchX, glitchY);
-            ctx.lineTo(glitchX + shape.size, glitchY);
-            ctx.lineTo(glitchX + shape.size/2, glitchY - shape.size);
-            ctx.closePath();
-        }
-
-        ctx.stroke();
-    });
-
-    requestAnimationFrame(drawShapes);
-}
-
-drawShapes();
-
-// Fix autoplay
-document.body.addEventListener("click", () => {
-    document.getElementById("wind").play();
-});
 </script>
-
-</body>
-</html>
