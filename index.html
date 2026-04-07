@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -9,9 +10,10 @@
 body {
     margin: 0;
     height: 100vh;
-    background: url("your-image.png") no-repeat center center/cover;
+    background: linear-gradient(135deg, #0a0015, #2b0040, #000000);
     font-family: Arial, sans-serif;
     overflow: hidden;
+    color: red;
 }
 
 /* Dark overlay */
@@ -19,65 +21,29 @@ body {
     position: absolute;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0,0,0,0.6);
 }
 
-/* Cinematic text */
+/* Title */
 .title {
     position: absolute;
-    top: 50%;
+    top: 40%;
     left: 50%;
     transform: translate(-50%, -50%);
-    color: red;
     font-size: 60px;
     font-weight: bold;
-    letter-spacing: 4px;
+    letter-spacing: 5px;
     text-align: center;
-    text-transform: uppercase;
-    animation: flicker 2s infinite;
 }
 
-/* Glitch layers */
-.title::before,
-.title::after {
-    content: "RED VS GLITCH S1 E2";
+/* Timer */
+.timer {
     position: absolute;
-    left: 0;
-    width: 100%;
-}
-
-.title::before {
-    color: #ff0000;
-    animation: glitchTop 1s infinite;
-}
-
-.title::after {
-    color: #990000;
-    animation: glitchBottom 1s infinite;
-}
-
-/* Animations */
-@keyframes flicker {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
-}
-
-@keyframes glitchTop {
-    0% { transform: translate(0); }
-    20% { transform: translate(-2px, -2px); }
-    40% { transform: translate(2px, 2px); }
-    60% { transform: translate(-1px, 1px); }
-    80% { transform: translate(1px, -1px); }
-    100% { transform: translate(0); }
-}
-
-@keyframes glitchBottom {
-    0% { transform: translate(0); }
-    20% { transform: translate(2px, 2px); }
-    40% { transform: translate(-2px, -2px); }
-    60% { transform: translate(1px, -1px); }
-    80% { transform: translate(-1px, 1px); }
-    100% { transform: translate(0); }
+    top: 60%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 40px;
+    letter-spacing: 3px;
 }
 </style>
 
@@ -87,6 +53,52 @@ body {
 <div class="overlay"></div>
 
 <div class="title">RED VS GLITCH S1 E2</div>
+<div class="timer" id="countdown">48:00:00</div>
+
+<!-- Wind sound -->
+
+<audio id="wind" autoplay loop>
+    <source src="dragon-studio-heavy-blizzard-wind-gust-515271 (1).mp3" type="audio/mpeg">
+</audio>
+
+<script>
+// Check if a saved end time exists
+let endTime = localStorage.getItem("endTime");
+
+if (!endTime) {
+    // Set new 48 hour timer
+    endTime = new Date().getTime() + (48 * 60 * 60 * 1000);
+    localStorage.setItem("endTime", endTime);
+}
+
+const countdownEl = document.getElementById("countdown");
+
+function updateTimer() {
+    let now = new Date().getTime();
+    let distance = endTime - now;
+
+    if (distance < 0) {
+        countdownEl.textContent = "00:00:00";
+        return;
+    }
+
+    let hours = Math.floor(distance / (1000 * 60 * 60));
+    let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    let seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+    countdownEl.textContent =
+        String(hours).padStart(2, '0') + ":" +
+        String(minutes).padStart(2, '0') + ":" +
+        String(seconds).padStart(2, '0');
+}
+
+setInterval(updateTimer, 1000);
+
+// Fix autoplay (user interaction fallback)
+document.body.addEventListener("click", () => {
+    document.getElementById("wind").play();
+});
+</script>
 
 </body>
 </html>
