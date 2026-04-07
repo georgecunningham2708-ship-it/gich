@@ -1,10 +1,110 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RED VS GLITCH S1 E2</title>
+
+<style>
+body {
+    margin: 0;
+    height: 100vh;
+    background: linear-gradient(135deg, #0a0015, #2b0040, #000000);
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+    color: red;
+}
+
+.overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+}
+
+.flash {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: red;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.1s;
+}
+
+.title {
+    position: absolute;
+    top: 35%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 60px;
+    letter-spacing: 5px;
+    text-align: center;
+}
+
+.timer {
+    position: absolute;
+    top: 55%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 40px;
+}
+
+/* END SCREEN */
+.endScreen {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: black;
+    color: red;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 50px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 2s;
+}
+
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="overlay"></div>
+<div class="flash" id="flash"></div>
+<div class="endScreen" id="endScreen">Check YouTube.</div>
+
+<canvas id="canvas"></canvas>
+
+<div class="title">RED VS GLITCH S1 E2</div>
+<div class="timer" id="countdown">72:00:00</div>
+
+<audio id="wind" autoplay loop>
+<source src="dragon-studio-heavy-blizzard-wind-gust-515271 (1).mp3" type="audio/mpeg">
+</audio>
+
+<audio id="glitch">
+<source src="dragon-studio-glitch-effect-2-397980.mp3" type="audio/mpeg">
+</audio>
+
 <script>
-// RESET TIMER WITH "R"
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// RESET KEY (R)
 document.addEventListener("keydown", (e) => {
     if (e.key.toLowerCase() === "r") {
-        localStorage.removeItem("endTime");
-        localStorage.removeItem("lastSpawn");
-        localStorage.removeItem("shapes");
+        localStorage.clear();
         location.reload();
     }
 });
@@ -13,18 +113,25 @@ document.addEventListener("keydown", (e) => {
 let endTime = localStorage.getItem("endTime");
 
 if (!endTime) {
-    endTime = new Date().getTime() + (72 * 60 * 60 * 1000);
+    endTime = Date.now() + (72 * 60 * 60 * 1000);
     localStorage.setItem("endTime", endTime);
+} else {
+    endTime = parseInt(endTime); // 🔥 FIX
 }
 
 const countdownEl = document.getElementById("countdown");
+const endScreen = document.getElementById("endScreen");
 
 function updateTimer() {
-    let now = new Date().getTime();
+    let now = Date.now();
     let distance = endTime - now;
 
-    if (distance < 0) {
+    if (distance <= 0) {
         countdownEl.textContent = "00:00:00";
+
+        // Fade to ending
+        endScreen.style.opacity = 1;
+
         return;
     }
 
@@ -38,7 +145,100 @@ function updateTimer() {
         String(seconds).padStart(2, '0');
 }
 
-// 🔥 RUN IMMEDIATELY so it shows 72:00:00 instantly
 updateTimer();
 setInterval(updateTimer, 1000);
+
+// SHAPES
+let shapes = JSON.parse(localStorage.getItem("shapes") || "[]");
+
+function addShape() {
+    const types = ["circle", "square", "triangle"];
+    const type = types[Math.floor(Math.random() * types.length)];
+
+    shapes.push({
+        type,
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: 30 + Math.random() * 50
+    });
+
+    localStorage.setItem("shapes", JSON.stringify(shapes));
+
+    // glitch sound
+    const glitch = document.getElementById("glitch");
+    glitch.volume = 0.4;
+    glitch.currentTime = 0;
+    glitch.play();
+
+    // flash
+    const flash = document.getElementById("flash");
+    flash.style.opacity = 0.8;
+    setTimeout(() => flash.style.opacity = 0, 100);
+}
+
+// HOURLY SPAWN
+let lastSpawn = localStorage.getItem("lastSpawn");
+
+if (!lastSpawn) {
+    lastSpawn = Date.now();
+    localStorage.setItem("lastSpawn", lastSpawn);
+} else {
+    lastSpawn = parseInt(lastSpawn);
+}
+
+function checkSpawn() {
+    let now = Date.now();
+
+    if (now - lastSpawn >= 3600000) {
+        addShape();
+        lastSpawn = now;
+        localStorage.setItem("lastSpawn", lastSpawn);
+    }
+}
+
+setInterval(checkSpawn, 10000);
+
+// DRAW
+function drawShapes() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    shapes.forEach(shape => {
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 2;
+
+        let gx = shape.x + (Math.random() - 0.5) * 4;
+        let gy = shape.y + (Math.random() - 0.5) * 4;
+
+        ctx.beginPath();
+
+        if (shape.type === "circle") {
+            ctx.arc(gx, gy, shape.size, 0, Math.PI * 2);
+        }
+
+        if (shape.type === "square") {
+            ctx.rect(gx, gy, shape.size, shape.size);
+        }
+
+        if (shape.type === "triangle") {
+            ctx.moveTo(gx, gy);
+            ctx.lineTo(gx + shape.size, gy);
+            ctx.lineTo(gx + shape.size/2, gy - shape.size);
+            ctx.closePath();
+        }
+
+        ctx.stroke();
+    });
+
+    requestAnimationFrame(drawShapes);
+}
+
+drawShapes();
+
+// autoplay fix
+document.body.addEventListener("click", () => {
+    document.getElementById("wind").play();
+});
 </script>
+
+</body>
+</html>
